@@ -1,0 +1,18 @@
+services:
+  currency-bot:
+    build: .
+    container_name: currency-bot
+    restart: always
+    volumes:
+      - ./logs:/app/logs
+    env_file:
+      - .env
+
+  tests:
+    build: .
+    container_name: currency-bot-tests
+    volumes:
+      - ./logs:/app/logs
+    env_file:
+      - .env
+    command: pytest
