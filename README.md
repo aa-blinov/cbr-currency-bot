@@ -2,6 +2,7 @@
 
 A Telegram bot that provides up-to-date exchange rates from the Central Bank of Russia. The bot allows users to retrieve current currency rates relative to the Russian ruble through a convenient Telegram interface.
 
+DEMO: @cbrfxbot
 ---
 
 ## Key Features
