@@ -6,8 +6,10 @@ from app.api.cbr import CBRClient
 from app.bot.keyboards import create_currencies_keyboard
 from app.utils.text_utils import format_currency_message
 from app.config import settings
+from app.stats.service import StatsService
 
 cbr_client = CBRClient()
+stats_service = StatsService()
 
 WAITING_FOR_CUSTOM_CODE = "waiting_for_custom_code"
 
@@ -23,6 +25,13 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     username = user.username or user.first_name
 
     logger.info(f"Пользователь {username} (ID: {user_id}) запустил бота")
+
+    # Record user activity
+    await stats_service.record_user_activity(
+        user_id=user_id,
+        username=user.username,
+        first_name=user.first_name,
+    )
 
     keyboard = create_currencies_keyboard(settings.base_currencies)
 
@@ -68,6 +77,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     message_text = update.message.text.strip()
 
     logger.debug(f"Получено сообщение от {user_id}: {message_text}")
+
+    # Record user activity
+    await stats_service.record_user_activity(
+        user_id=user_id,
+        username=user.username,
+        first_name=user.first_name,
+    )
 
     if not context.user_data:
         context.user_data.clear()
@@ -146,3 +162,52 @@ async def get_currency_rate(update: Update, context: ContextTypes.DEFAULT_TYPE, 
             f"❌ Не удалось получить курс валюты {currency_code}.\n"
             f"Проверьте правильность кода валюты или попробуйте позже."
         )
+
+
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handles the /stats command - shows bot statistics."""
+    if not update.message:
+        logger.error("Failed to retrieve message information from update")
+        return
+
+    user = update.effective_user
+    if not user:
+        logger.error("Failed to retrieve user information")
+        return
+
+    user_id = user.id
+
+    # Check whitelist if configured
+    if settings.stats_whitelist is not None:
+        if user_id not in settings.stats_whitelist:
+            logger.info(f"User {user_id} attempted to access /stats but is not in whitelist")
+            await update.message.reply_text("❌ У вас нет доступа к этой команде.")
+            return
+
+    try:
+        total_users = await stats_service.get_total_users()
+        today_stats = await stats_service.get_daily_stats()
+        recent_stats = await stats_service.get_recent_stats(days=7)
+
+        # Calculate weekly totals
+        weekly_active = sum(stat.active_users for stat in recent_stats)
+        weekly_requests = sum(stat.total_requests for stat in recent_stats)
+        weekly_new = sum(stat.new_users for stat in recent_stats)
+
+        message = (
+            "📊 <b>Статистика бота</b>\n\n"
+            f"👥 <b>Всего пользователей:</b> {total_users}\n\n"
+            f"📅 <b>Сегодня ({today_stats.date.strftime('%d.%m.%Y')}):</b>\n"
+            f"   • Активных: {today_stats.active_users}\n"
+            f"   • Запросов: {today_stats.total_requests}\n"
+            f"   • Новых: {today_stats.new_users}\n\n"
+            f"📈 <b>За последние 7 дней:</b>\n"
+            f"   • Активных: {weekly_active}\n"
+            f"   • Запросов: {weekly_requests}\n"
+            f"   • Новых: {weekly_new}\n"
+        )
+
+        await update.message.reply_text(message, parse_mode="HTML")
+    except Exception as e:
+        logger.exception(f"Error getting statistics: {e}")
+        await update.message.reply_text("❌ Ошибка при получении статистики. Попробуйте позже.")

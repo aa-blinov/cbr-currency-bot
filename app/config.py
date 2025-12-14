@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
@@ -25,6 +25,11 @@ class Settings(BaseSettings):
         json_schema_extra={"env": "CBR_API_URL"},
     )
 
+    stats_whitelist: Optional[List[int]] = Field(
+        default=None,
+        json_schema_extra={"env": "STATS_WHITELIST"},
+    )
+
     model_config = {
         "env_file": BASE_DIR / ".env",
         "env_file_encoding": "utf-8",
@@ -40,6 +45,25 @@ class Settings(BaseSettings):
             except json.JSONDecodeError:
                 return [currency.strip() for currency in value.split(",")]
 
+        return value
+
+    @field_validator("stats_whitelist", mode="before")
+    def parse_stats_whitelist(cls, value):
+        """Parses the stats whitelist from a comma-separated string of user IDs to a list of integers."""
+        if value is None or value == "":
+            return None
+        if isinstance(value, str):
+            try:
+                # Try to parse as JSON array first
+                import json
+                parsed = json.loads(value)
+                if isinstance(parsed, list):
+                    return [int(user_id) for user_id in parsed]
+            except (json.JSONDecodeError, ValueError, TypeError):
+                # Parse as comma-separated string
+                return [int(user_id.strip()) for user_id in value.split(",") if user_id.strip()]
+        if isinstance(value, list):
+            return [int(user_id) for user_id in value]
         return value
 
 

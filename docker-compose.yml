@@ -5,6 +5,7 @@ services:
     restart: always
     volumes:
       - ./logs:/app/logs
+      - ./bot_stats.db:/app/bot_stats.db
     env_file:
       - .env
 

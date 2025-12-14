@@ -27,7 +27,10 @@ class CBRClient:
                 return self._parse_currency_data(response.text, currency_code.upper())
 
         except httpx.RequestError as exc:
-            logger.error(f"Network request error: {exc}")
+            logger.error(f"Network request error to CBR API ({self.api_url}): {type(exc).__name__}: {exc}")
+            return None
+        except httpx.TimeoutException as exc:
+            logger.error(f"Timeout while requesting CBR API: {exc}")
             return None
         except Exception as exc:
             logger.exception(f"Unexpected error while retrieving the exchange rate: {exc}")

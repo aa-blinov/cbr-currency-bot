@@ -12,6 +12,8 @@ DEMO: @cbrfxbot
 - Automatically recalculates currency-to-ruble ratios.
 - Provides an intuitive quick-select keyboard in the Telegram interface.
 - Detailed logging of bot operations.
+- Statistics tracking: user count, daily activity, and request metrics.
+- Whitelist support for statistics access control.
 
 ---
 
@@ -45,7 +47,10 @@ DEMO: @cbrfxbot
    TELEGRAM_TOKEN=your_telegram_bot_token_here
    LOG_LEVEL=INFO
    BASE_CURRENCIES=["USD", "EUR", "CNY", "KZT", "KGS", "BYN"]
+   STATS_WHITELIST=123456789,987654321
    ```
+
+   **Note:** `STATS_WHITELIST` is optional. If set, only users with IDs listed (comma-separated) can access the `/stats` command. If not set, all users can access statistics.
 
 ---
 
@@ -93,9 +98,21 @@ This command will run all tests using `pytest` inside the Docker container.
 
 ---
 
+## Statistics
+
+The bot automatically tracks usage statistics:
+- Total number of registered users
+- Daily active users
+- Daily request count
+- New user registrations
+
+Use the `/stats` command to view statistics. Access can be restricted using the `STATS_WHITELIST` environment variable.
+
 ## Logging
 
 Logs are stored in the `logs/` directory and include information about bot operations, user requests, and potential errors. By default, log rotation is configured by file size (5 MB) with archives retained for up to 10 days.
+
+Statistics are stored in `bot_stats.db` (SQLite database) in the project root directory.
 
 ---
 
