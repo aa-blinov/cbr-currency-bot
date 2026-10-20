@@ -44,7 +44,7 @@ class StatsService:
             """)
 
             await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_users_last_activity 
+                CREATE INDEX IF NOT EXISTS idx_users_last_activity
                 ON users(last_activity)
             """)
 
@@ -77,7 +77,7 @@ class StatsService:
 
                 await conn.execute(
                     """
-                    UPDATE users 
+                    UPDATE users
                     SET username = ?, first_name = ?, last_activity = ?, total_requests = ?
                     WHERE user_id = ?
                     """,
@@ -173,7 +173,7 @@ class StatsService:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute(
                 """
-                SELECT * FROM daily_stats 
+                SELECT * FROM daily_stats
                 WHERE date BETWEEN ? AND ?
                 ORDER BY date DESC
                 """,
@@ -196,4 +196,3 @@ class StatsService:
         end_date = date.today()
         start_date = date.fromordinal(end_date.toordinal() - days + 1)
         return await self.get_stats_for_period(start_date, end_date)
-

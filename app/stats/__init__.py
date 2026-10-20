@@ -3,4 +3,3 @@
 from app.stats.service import StatsService
 
 __all__ = ["StatsService"]
-

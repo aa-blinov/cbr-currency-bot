@@ -36,4 +36,3 @@ class DailyStats:
         self.active_users = active_users
         self.total_requests = total_requests
         self.new_users = new_users
-
