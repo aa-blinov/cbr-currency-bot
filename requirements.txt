@@ -3,7 +3,7 @@ httpx==0.28.1
 loguru==0.7.3
 pydantic==2.14.1
 pydantic_core==2.50.1
-pydantic_settings==2.16.0
+pydantic_settings==2.16.1
 python-telegram-bot==22.8
 pytest==9.1.1
 pytest-asyncio==1.4.0
